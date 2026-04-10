@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruflo Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #07111f;
+    --panel: #0c1728;
+    --panel-2: #101d32;
+    --line: #22324a;
+    --text: #e2e8f0;
+    --muted: #8b9bb2;
+    --accent: #38bdf8;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 28%),
+      radial-gradient(circle at top right, rgba(74, 222, 128, 0.10), transparent 24%),
+      linear-gradient(180deg, #08101d 0%, #05101a 100%);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  .shell { max-width: 1440px; margin: 0 auto; padding: 24px; }
+  .hero {
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    background: linear-gradient(135deg, rgba(16, 29, 50, 0.95), rgba(12, 23, 40, 0.95));
+    border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px; margin-bottom: 20px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  }
+  .hero h1 { font-size: 30px; letter-spacing: 0.04em; }
+  .hero p { color: var(--muted); margin-top: 6px; max-width: 760px; line-height: 1.5; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+    background: rgba(56, 189, 248, 0.12); color: var(--accent); border: 1px solid rgba(56, 189, 248, 0.25);
+    border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 18px var(--good); }
+  .meta { text-align: right; color: var(--muted); font-size: 12px; line-height: 1.6; }
+  .toolbar {
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 18px; color: var(--muted); font-size: 12px;
+  }
+  .toolbar a { color: var(--accent); text-decoration: none; }
+  .grid-metrics {
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px;
+  }
+  .card {
+    background: rgba(12, 23, 40, 0.92); border: 1px solid var(--line); border-radius: 16px; padding: 18px;
+  }
+  .label { color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .value { margin-top: 10px; font-size: 28px; font-weight: 800; }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 12px; }
+  .positive { color: var(--good); }
+  .negative { color: var(--bad); }
+  .neutral { color: var(--muted); }
+  .layout {
+    display: grid; grid-template-columns: 1.35fr 0.95fr; gap: 18px; margin-bottom: 18px;
+  }
+  .layout-2 {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;
+  }
+  .panel {
+    background: rgba(12, 23, 40, 0.92); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
+  }
+  .panel-head {
+    padding: 16px 18px; border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; gap: 12px; align-items: center;
+  }
+  .panel-head h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #b9c7da; }
+  .panel-body { padding: 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; color: var(--muted); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 10px 12px; border-bottom: 1px solid var(--line);
+  }
+  td {
+    padding: 11px 12px; border-bottom: 1px solid rgba(34, 50, 74, 0.55); color: #d6e1ef;
+    vertical-align: top;
+  }
+  tr:hover td { background: rgba(255, 255, 255, 0.02); }
+  .badge-mini {
+    display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+  }
+  .buy { background: rgba(74, 222, 128, 0.12); color: var(--good); }
+  .sell { background: rgba(248, 113, 113, 0.12); color: var(--bad); }
+  .hold { background: rgba(139, 155, 178, 0.12); color: #cdd8e6; }
+  .muted-box {
+    color: var(--muted); font-size: 12px; line-height: 1.6; padding: 18px;
+    background: rgba(8, 16, 29, 0.6); border: 1px dashed rgba(139, 155, 178, 0.28); border-radius: 14px;
+  }
+  .chart-wrap { position: relative; height: 260px; }
+  .steps {
+    display: grid; gap: 10px;
+  }
+  .step {
+    background: rgba(8, 16, 29, 0.55); border: 1px solid rgba(34, 50, 74, 0.65); border-radius: 14px;
+    padding: 12px 14px;
+  }
+  .step strong { display: block; margin-bottom: 5px; color: #dbeafe; }
+  .step span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+  .issues {
+    display: grid; gap: 8px;
+  }
+  .issue {
+    border-left: 3px solid var(--warn); background: rgba(251, 191, 36, 0.08);
+    padding: 10px 12px; border-radius: 10px; color: #f8e9b2; font-size: 12px;
+  }
+  .footer {
+    margin-top: 10px; color: var(--muted); font-size: 11px; text-align: center; padding-bottom: 12px;
+  }
+  @media (max-width: 1080px) {
+    .grid-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .layout, .layout-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .shell { padding: 14px; }
+    .grid-metrics { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 24px; }
+    .meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hero">
+    <div>
+      <h1>RUFLO</h1>
+      <p>Experimental multi-agent research bot for side-by-side testing against The Claude Portfolio. This dashboard auto-loads local run files and refreshes as the bot writes new results.</p>
+      <div class="badge"><span class="dot"></span><span id="status-badge">LIVE DASHBOARD</span></div>
+    </div>
+    <div class="meta">
+      <div id="bot-name">Bot: Ruflo</div>
+      <div id="run-time">Last run: --</div>
+      <div id="strategy">Strategy: --</div>
+      <div><a href="file:///C:/Users/deluc/OneDrive/Documents/Claude/Projects/The%20Claude%20Portfolio/dashboard.html" target="_blank" rel="noreferrer">Open control dashboard</a></div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div>Auto-refreshes every 45 seconds. Files loaded: `portfolio.json`, `trades.csv`, `run_summary.json`.</div>
+    <div id="load-state">Waiting for local files...</div>
+  </div>
+
+  <div class="grid-metrics">
+    <div class="card"><div class="label">Portfolio Value</div><div class="value" id="portfolio-value">$10,000.00</div><div class="sub" id="portfolio-delta">-</div></div>
+    <div class="card"><div class="label">Cash</div><div class="value" id="cash">$10,000.00</div><div class="sub neutral" id="cash-pct">100.0% liquid</div></div>
+    <div class="card"><div class="label">Open Positions</div><div class="value" id="positions-count">0</div><div class="sub neutral" id="positions-sub">no active positions</div></div>
+    <div class="card"><div class="label">Win Rate</div><div class="value" id="win-rate">-</div><div class="sub neutral" id="trades-count">0 completed trades</div></div>
+    <div class="card"><div class="label">Total P&amp;L</div><div class="value" id="pnl">-</div><div class="sub" id="avg-return">avg return per trade</div></div>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <div class="panel-head"><h2>Open Positions</h2><span id="positions-updated" class="sub">--</span></div>
+      <div class="panel-body" style="padding:0;">
+        <table>
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Shares</th>
+              <th>Entry</th>
+              <th>Current</th>
+              <th>Value</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="positions-table">
+            <tr><td colspan="6"><div class="muted-box">No positions loaded yet.</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Allocation</h2><span class="sub">Cash + position values</span></div>
+      <div class="panel-body">
+        <div class="chart-wrap"><canvas id="alloc-chart"></canvas></div>
+        <div class="muted-box" id="allocation-note">The chart updates from local portfolio data and shows how capital is distributed.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout-2">
+    <div class="panel">
+      <div class="panel-head"><h2>Last Run</h2><span class="sub" id="summary-status">--</span></div>
+      <div class="panel-body">
+        <div id="run-summary" class="muted-box">No run summary loaded yet.</div>
+        <div class="steps" id="run-steps" style="margin-top:14px;"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Performance</h2><span class="sub">Trade history</span></div>
+      <div class="panel-body">
+        <div class="chart-wrap"><canvas id="perf-chart"></canvas></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;" id="perf-stats"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout-2">
+    <div class="panel">
+      <div class="panel-head"><h2>Trade History</h2><span class="sub" id="trades-updated">--</span></div>
+      <div class="panel-body" style="padding:0;max-height:360px;overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Ticker</th>
+              <th>Action</th>
+              <th>Price</th>
+              <th>Shares</th>
+              <th>Confidence</th>
+            </tr>
+          </thead>
+          <tbody id="trades-table">
+            <tr><td colspan="6"><div class="muted-box">No trades loaded yet.</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>Issues</h2><span class="sub">Warnings and failures</span></div>
+      <div class="panel-body">
+        <div class="issues" id="issues"></div>
+        <div class="muted-box" id="signals-note" style="margin-top:14px;">Ruflo is the experimental bot. Use this view to compare research depth and execution stability against the control app.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Ruflo experimental dashboard · local paper-trading comparison mode</div>
+</div>
+
+<script>
+let portfolio = { cash: 10000, positions: {} };
+let trades = [];
+let runSummary = null;
+let allocChart = null;
+let perfChart = null;
+const AUTO_REFRESH_MS = 45000;
+
+function fmtMoney(value) {
+  return `$${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function fmtPct(value) {
+  return `${Number(value || 0).toFixed(1)}%`;
+}
+
+async function fetchTextIfExists(path) {
+  const response = await fetch(path, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`${path} unavailable`);
+  }
+  return response.text();
+}
+
+async function loadJson(path) {
+  const response = await fetch(path, { cache: "no-store" });
+  if (!response.ok) {
+    throw new Error(`${path} unavailable`);
+  }
+  return response.json();
+}
+
+function parseCsv(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length <= 1) return [];
+  const headers = lines[0].split(",").map((h) => h.trim());
+  return lines.slice(1).filter(Boolean).map((line) => {
+    const values = line.split(",");
+    const row = {};
+    headers.forEach((header, idx) => {
+      row[header] = (values[idx] || "").trim();
+    });
+    return row;
+  });
+}
+
+async function autoLoadData() {
+  if (!window.location.protocol.startsWith("http")) {
+    document.getElementById("load-state").textContent = "Serve Ruflo with `python -m http.server` to auto-load local files.";
+    return;
+  }
+
+  try {
+    const [portfolioData, tradesText, summaryData] = await Promise.all([
+      loadJson("portfolio.json"),
+      fetchTextIfExists("trades.csv"),
+      loadJson("run_summary.json"),
+    ]);
+    portfolio = portfolioData || portfolio;
+    trades = parseCsv(tradesText);
+    runSummary = summaryData || null;
+    document.getElementById("load-state").textContent = "Loaded local Rufflo run files.";
+    renderAll();
+  } catch (error) {
+    document.getElementById("load-state").textContent = "Waiting for the bot to write local files.";
+    renderFallback();
+  }
+}
+
+function calculatePortfolioValue() {
+  let value = Number(portfolio.cash || 0);
+  const positions = portfolio.positions || {};
+  for (const pos of Object.values(positions)) {
+    const shares = Number(pos.shares || 0);
+    const current = Number(pos.current_price || pos.entry_price || 0);
+    value += shares * current;
+  }
+  return value;
+}
+
+function renderMetrics() {
+  const positions = portfolio.positions || {};
+  const totalValue = calculatePortfolioValue();
+  const initialCash = Number(portfolio.initial_cash || 10000);
+  const cash = Number(portfolio.cash || 0);
+  const returnPct = initialCash ? ((totalValue - initialCash) / initialCash) * 100 : 0;
+
+  document.getElementById("portfolio-value").textContent = fmtMoney(totalValue);
+  document.getElementById("portfolio-delta").textContent = `${returnPct >= 0 ? "+" : ""}${returnPct.toFixed(1)}% vs initial cash`;
+  document.getElementById("portfolio-delta").className = `sub ${returnPct >= 0 ? "positive" : "negative"}`;
+  document.getElementById("cash").textContent = fmtMoney(cash);
+  document.getElementById("cash-pct").textContent = `${totalValue ? ((cash / totalValue) * 100).toFixed(1) : "0.0"}% liquid`;
+  document.getElementById("positions-count").textContent = Object.keys(positions).length;
+  document.getElementById("positions-sub").textContent = Object.keys(positions).length ? "positions are actively tracked" : "no active positions";
+
+  const metrics = runSummary?.metrics || {};
+  document.getElementById("win-rate").textContent = metrics.win_rate != null ? fmtPct(metrics.win_rate * 100) : "-";
+  document.getElementById("trades-count").textContent = metrics.total_trades != null ? `${metrics.total_trades} completed trades` : "0 completed trades";
+  const totalReturn = metrics.total_return != null ? Number(metrics.total_return) : null;
+  document.getElementById("pnl").textContent = totalReturn != null ? `${totalReturn >= 0 ? "+" : ""}${(totalReturn * 100).toFixed(1)}%` : "-";
+  document.getElementById("avg-return").textContent = metrics.avg_return != null ? `avg return per trade ${(metrics.avg_return * 100).toFixed(1)}%` : "avg return per trade";
+}
+
+function renderPositions() {
+  const tbody = document.getElementById("positions-table");
+  const positions = portfolio.positions || {};
+  const rows = Object.entries(positions);
+  const totalValue = calculatePortfolioValue();
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="muted-box">No positions to display.</div></td></tr>`;
+    document.getElementById("positions-updated").textContent = "No holdings";
+    return;
+  }
+
+  tbody.innerHTML = rows.map(([ticker, pos]) => {
+    const shares = Number(pos.shares || 0);
+    const entry = Number(pos.entry_price || 0);
+    const current = Number(pos.current_price || entry);
+    const value = shares * current;
+    const conf = Number(pos.confidence || 0);
+    return `
+      <tr>
+        <td><strong>${ticker}</strong></td>
+        <td>${shares.toFixed(4)}</td>
+        <td>${fmtMoney(entry)}</td>
+        <td>${fmtMoney(current)}</td>
+        <td>${fmtMoney(value)}</td>
+        <td>${conf}%</td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("positions-updated").textContent = `Total value ${fmtMoney(totalValue)}`;
+}
+
+function renderTrades() {
+  const tbody = document.getElementById("trades-table");
+  if (!trades.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="muted-box">No trades to display.</div></td></tr>`;
+    document.getElementById("trades-updated").textContent = "No trades yet";
+    return;
+  }
+
+  tbody.innerHTML = trades.slice().reverse().slice(0, 50).map((trade) => {
+    const action = String(trade.action || "").toUpperCase();
+    const cls = action === "BUY" ? "buy" : action === "SELL" ? "sell" : "hold";
+    return `
+      <tr>
+        <td>${trade.date || ""}</td>
+        <td><strong>${trade.ticker || ""}</strong></td>
+        <td><span class="badge-mini ${cls}">${action}</span></td>
+        <td>${fmtMoney(trade.price)}</td>
+        <td>${Number(trade.shares || 0).toFixed(4)}</td>
+        <td>${trade.confidence || 0}%</td>
+      </tr>
+    `;
+  }).join("");
+
+  document.getElementById("trades-updated").textContent = `${trades.length} trade rows loaded`;
+}
+
+function renderSummary() {
+  const summaryEl = document.getElementById("run-summary");
+  const status = String(runSummary?.status || "unknown").toUpperCase();
+  document.getElementById("status-badge").textContent = `${status} DASHBOARD`;
+  document.getElementById("summary-status").textContent = status;
+  document.getElementById("summary-status").className = `sub ${status === "FAILED" ? "negative" : status === "DEGRADED" ? "positive" : "neutral"}`;
+  document.getElementById("bot-name").textContent = `Bot: ${runSummary?.bot_name || "Ruflo"}`;
+  document.getElementById("strategy").textContent = `Strategy: ${runSummary?.strategy || "multi_agent_research"}`;
+  document.getElementById("run-time").textContent = `Last run: ${runSummary?.timestamp || "--"}`;
+
+  if (!runSummary) {
+    summaryEl.textContent = "No run summary loaded yet.";
+    document.getElementById("run-steps").innerHTML = "";
+    document.getElementById("issues").innerHTML = "";
+    return;
+  }
+
+  summaryEl.innerHTML = `
+    <div><strong>Status:</strong> ${runSummary.status || "unknown"}</div>
+    <div><strong>Portfolio value:</strong> ${fmtMoney(runSummary.portfolio_value)}</div>
+    <div><strong>Cash:</strong> ${fmtMoney(runSummary.cash)}</div>
+    <div><strong>Positions:</strong> ${runSummary.positions_count ?? 0}</div>
+    <div><strong>Rebalance executed:</strong> ${runSummary.rebalance_executed ? "yes" : "no"}</div>
+  `;
+
+  const steps = Array.isArray(runSummary.steps) ? runSummary.steps : [];
+  document.getElementById("run-steps").innerHTML = steps.length
+    ? steps.map((step) => `
+        <div class="step">
+          <strong>${step.label || "Step"}</strong>
+          <span>${step.detail || ""}</span>
+        </div>
+      `).join("")
+    : `<div class="muted-box">No steps recorded yet.</div>`;
+
+  const issues = Array.isArray(runSummary.issues) ? runSummary.issues : [];
+  document.getElementById("issues").innerHTML = issues.length
+    ? issues.map((issue) => `<div class="issue">${issue}</div>`).join("")
+    : `<div class="muted-box">No issues reported in the latest run.</div>`;
+}
+
+function renderAllocationChart() {
+  const ctx = document.getElementById("alloc-chart");
+  const entries = Object.entries(portfolio.positions || {});
+  const labels = entries.map(([ticker]) => ticker);
+  const data = entries.map(([, pos]) => Number(pos.shares || 0) * Number(pos.current_price || pos.entry_price || 0));
+  const total = data.reduce((sum, value) => sum + value, 0);
+  const cash = Number(portfolio.cash || 0);
+
+  if (!labels.length) {
+    labels.push("Cash");
+    data.push(cash);
+  } else {
+    labels.push("Cash");
+    data.push(cash);
+  }
+
+  if (allocChart) allocChart.destroy();
+  allocChart = new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: [
+          "#38bdf8", "#4ade80", "#f59e0b", "#f87171", "#818cf8",
+          "#22c55e", "#06b6d4", "#f97316", "#e879f9", "#14b8a6",
+          "#94a3b8"
+        ],
+        borderColor: "#0c1728",
+        borderWidth: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: "#d6e1ef", boxWidth: 14, padding: 14 },
+        },
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              const value = item.raw || 0;
+              const pct = total + cash > 0 ? ((value / (total + cash)) * 100).toFixed(1) : "0.0";
+              return `${item.label}: ${fmtMoney(value)} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+function renderPerformanceChart() {
+  const ctx = document.getElementById("perf-chart");
+  const completed = trades.filter((trade) => String(trade.action || "").toUpperCase() === "SELL");
+  const labels = completed.map((trade, index) => trade.date ? trade.date.slice(0, 10) : `Trade ${index + 1}`);
+  const values = completed.map((trade) => Number(trade.price || 0));
+
+  if (perfChart) perfChart.destroy();
+  perfChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Sell Prices",
+        data: values,
+        tension: 0.32,
+        borderColor: "#38bdf8",
+        backgroundColor: "rgba(56, 189, 248, 0.16)",
+        fill: true,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: "#d6e1ef" } },
+      },
+      scales: {
+        x: { ticks: { color: "#8b9bb2" }, grid: { color: "rgba(34, 50, 74, 0.35)" } },
+        y: { ticks: { color: "#8b9bb2" }, grid: { color: "rgba(34, 50, 74, 0.35)" } },
+      },
+    },
+  });
+
+  const metrics = runSummary?.metrics || {};
+  document.getElementById("perf-stats").innerHTML = `
+    <div class="card"><div class="label">Total Trades</div><div class="value" style="font-size:22px;">${metrics.total_trades ?? 0}</div></div>
+    <div class="card"><div class="label">Avg Return</div><div class="value" style="font-size:22px;">${metrics.avg_return != null ? `${(metrics.avg_return * 100).toFixed(1)}%` : "-"}</div></div>
+  `;
+}
+
+function renderAll() {
+  renderMetrics();
+  renderPositions();
+  renderTrades();
+  renderSummary();
+  renderAllocationChart();
+  renderPerformanceChart();
+}
+
+function renderFallback() {
+  renderMetrics();
+  renderPositions();
+  renderTrades();
+  renderSummary();
+  renderAllocationChart();
+  renderPerformanceChart();
+}
+
+async function refreshLoop() {
+  await autoLoadData();
+  setInterval(autoLoadData, AUTO_REFRESH_MS);
+}
+
+refreshLoop();
+</script>
+</body>
+</html>

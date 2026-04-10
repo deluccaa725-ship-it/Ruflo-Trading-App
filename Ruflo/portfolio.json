@@ -1,0 +1,91 @@
+{
+  "cash": 0.0,
+  "initial_cash": 10000.0,
+  "positions": {
+    "LLY": {
+      "shares": 0.9482849050666107,
+      "entry_price": 953.3,
+      "current_price": 955.19,
+      "confidence": 51,
+      "last_updated": "2026-04-09T18:01:38.386634"
+    },
+    "META": {
+      "shares": 1.4450867052023122,
+      "entry_price": 612.42,
+      "current_price": 628.39,
+      "confidence": 50,
+      "last_updated": "2026-04-09T18:01:38.938404"
+    },
+    "V": {
+      "shares": 2.8061885033661316,
+      "entry_price": 308.96,
+      "current_price": 308.29,
+      "confidence": 49,
+      "last_updated": "2026-04-09T18:01:39.766524"
+    },
+    "AMZN": {
+      "shares": 3.76045197740113,
+      "entry_price": 221.25,
+      "current_price": 233.65,
+      "confidence": 47,
+      "last_updated": "2026-04-09T18:01:40.228854"
+    },
+    "UNH": {
+      "shares": 2.7191319694097653,
+      "entry_price": 305.98,
+      "current_price": 306.91,
+      "confidence": 47,
+      "last_updated": "2026-04-09T18:01:40.765155"
+    },
+    "XOM": {
+      "shares": 5.325822557931123,
+      "entry_price": 156.22,
+      "current_price": 155.04,
+      "confidence": 47,
+      "last_updated": "2026-04-09T18:01:41.291435"
+    },
+    "AAPL": {
+      "shares": 3.144071069911163,
+      "entry_price": 258.9,
+      "current_price": 260.49,
+      "confidence": 46,
+      "last_updated": "2026-04-09T18:01:41.821853"
+    },
+    "GOOGL": {
+      "shares": 2.5652338333543425,
+      "entry_price": 317.32,
+      "current_price": 318.49,
+      "confidence": 46,
+      "last_updated": "2026-04-09T18:01:42.333937"
+    },
+    "TSLA": {
+      "shares": 2.3714493809176984,
+      "entry_price": 343.25,
+      "current_price": 345.62,
+      "confidence": 46,
+      "last_updated": "2026-04-09T18:01:42.920249"
+    },
+    "JPM": {
+      "shares": 2.643114589083352,
+      "entry_price": 307.97,
+      "current_price": 310.33,
+      "confidence": 46,
+      "last_updated": "2026-04-09T18:01:43.468956"
+    },
+    "MSFT": {
+      "shares": 2.1264659525018033,
+      "entry_price": 374.33,
+      "current_price": 373.07,
+      "confidence": 45,
+      "last_updated": "2026-04-09T18:01:43.942457"
+    },
+    "NVDA": {
+      "shares": 4.3717047451669595,
+      "entry_price": 182.08,
+      "current_price": 183.91,
+      "confidence": 45,
+      "last_updated": "2026-04-09T18:01:44.515703"
+    }
+  },
+  "last_rebalance_month": "2026-04"
+}

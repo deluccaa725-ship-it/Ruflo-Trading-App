@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-04-09T18:01:36.710754",
+  "status": "degraded",
+  "issues": [
+    "Python 3.14+ detected. Python 3.11 is recommended for cleaner LangChain compatibility."
+  ],
+  "steps": [
+    {
+      "label": "Scheduling",
+      "detail": "Outside monthly rebalance window or already rebalanced this month"
+    },
+    {
+      "label": "Research",
+      "detail": "Skipped because there were no candidates"
+    },
+    {
+      "label": "Execution",
+      "detail": "Skipped: rebalance for 2026-04 already completed"
+    }
+  ],
+  "tickers_considered": [],
+  "signals": [],
+  "selected_assets": [],
+  "target_allocations": [],
+  "executed_buys": [],
+  "executed_sells": [],
+  "rebalance_executed": false,
+  "portfolio_value": 10091.04,
+  "cash": 0.0,
+  "positions_count": 12,
+  "metrics": {},
+  "bot_name": "Ruflo",
+  "strategy": "multi_agent_research",
+  "research_mode": "specialist_panel",
+  "decision_style": "aggressive",
+  "initial_cash": 10000.0
+}
